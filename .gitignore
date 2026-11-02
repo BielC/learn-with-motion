@@ -1,0 +1,39 @@
+# Credentials and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+.credentials*
+# Models, environments and generated lessons
+.venv/
+venv/
+models/
+output/
+outputs/
+build/
+cache/
+.cache/
+lessons/
+source-snapshots/
+*.safetensors
+*.gguf
+*.onnx
+*.bin
+*.pt
+*.pth
+*.npz
+*.wav
+*.mp3
+*.m4a
+*.mp4
+*.mov
+*.webm
+*.log
+# Python and editor state
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.DS_Store

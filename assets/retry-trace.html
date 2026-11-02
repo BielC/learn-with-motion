@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>Why retrying can save the same note twice</title>
+  <style>:root {
+  color-scheme: light;
+  --font-size-base: 16px;
+  --foreground: #24241f;
+  --muted-foreground: #6c6a62;
+  --border: #d4d0c5;
+  --background: #f5f3ed;
+  --secondary: #24241f;
+  --secondary-foreground: #fcfbf7;
+  --viz-series-1: #315d50;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font: 400 16px/1.6 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+main { width: min(100%, 900px); margin: 0 auto; padding: clamp(18px, 4vw, 48px); }
+.lesson-root { grid-template-columns: minmax(0, 1fr); }
+.lesson-root > *, .form-label { min-width: 0; }
+header { margin-bottom: 32px; }
+h1 { font: 400 clamp(2rem, 4vw, 3rem)/1.15 "Iowan Old Style", Georgia, serif; letter-spacing: -.025em; margin: 10px 0 14px; }
+p { margin: 12px 0; }
+a { color: var(--secondary); text-underline-offset: 3px; }
+.eyebrow { color: var(--muted-foreground); font-size: .85rem; }
+.text-small { font-size: .875rem; }
+.text-muted { color: var(--muted-foreground); }
+.tabular-nums { font-variant-numeric: tabular-nums; }
+code { font: .9em/1.6 ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; }
+.viz-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.form-label { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; max-width: 100%; }
+.form-select { width: 100%; min-width: 0; }
+button, select { font: inherit; }
+.form-select, .btn { min-height: 44px; border: 1px solid var(--border); border-radius: 2px; padding: 8px 12px; color: var(--foreground); background: var(--background); max-width: 100%; }
+.btn { cursor: pointer; }
+.btn-primary { background: var(--secondary); color: var(--secondary-foreground); border-color: var(--secondary); }
+.btn-ghost { border-color: transparent; }
+.btn:disabled { opacity: .55; cursor: default; }
+:focus-visible { outline: 3px solid var(--viz-series-1); outline-offset: 3px; }
+.table-responsive { overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; text-align: left; }
+.table th, .table td { border-bottom: 1px solid var(--border); padding: 12px 8px; }
+.table th { font-weight: 600; }
+.connection { margin: 0; max-width: 68ch; }
+details { margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border); }
+summary { cursor: pointer; font-weight: 600; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; }
+}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="eyebrow">Synthetic trace</div>
+    <h1>Why retrying can save the same note twice</h1>
+    <p>Follow request A carrying note N1. Compare saving every request with remembering request IDs. Move one step at a time and predict what a retry changes.</p>
+  </header>
+<div id="lwm-retry-demo" class="lesson-root">
+  <style>
+    #lwm-retry-demo { display: grid; gap: calc(var(--font-size-base) * 1); color: var(--foreground); }
+    #lwm-retry-demo .lesson-map { display: flex; flex-wrap: wrap; gap: calc(var(--font-size-base) * .5); }
+    #lwm-retry-demo .lesson-map span { color: var(--muted-foreground); }
+    #lwm-retry-demo .lesson-map [aria-current="step"] { color: var(--foreground); font-weight: 500; text-decoration: underline; text-underline-offset: 5px; }
+    #lwm-retry-demo .trace-diagram { width: 100%; display: block; overflow: visible; }
+    #lwm-retry-demo .trace-diagram text { fill: var(--foreground); font-family: inherit; }
+    #lwm-retry-demo .trace-diagram .wire { stroke: var(--border); stroke-width: 2; fill: none; }
+    #lwm-retry-demo .trace-diagram .packet { fill: var(--secondary); }
+    #lwm-retry-demo .trace-diagram .packet-label { fill: var(--secondary-foreground); }
+    #lwm-retry-demo .trace-diagram .note { fill: color-mix(in srgb, var(--viz-series-1) 20%, transparent); }
+    #lwm-retry-demo .trace-diagram .note-mark { fill: var(--viz-series-1); }
+    #lwm-retry-demo .rule { overflow-wrap: anywhere; }
+    #lwm-retry-demo .detail { min-height: calc(var(--font-size-base) * 2); }
+  </style>
+  <div class="lesson-map text-small" aria-label="Mechanism map">
+    <span data-stage="0" aria-current="step">Send A</span><span aria-hidden="true">→</span>
+    <span data-stage="1">Save</span><span aria-hidden="true">→</span>
+    <span data-stage="2">Lose reply</span><span aria-hidden="true">→</span>
+    <span data-stage="3">Retry A</span>
+  </div>
+  <div class="viz-controls">
+    <label class="form-label" for="lwm-version">Synthetic PR
+      <select class="form-select" id="lwm-version">
+        <option value="before">Before: save every request</option>
+        <option value="after">After: remember request IDs</option>
+      </select>
+    </label>
+  </div>
+  <div class="rule"><code id="lwm-rule">on request A: append(note N1)</code></div>
+  <svg class="trace-diagram" role="img" aria-labelledby="lwm-diagram-title lwm-diagram-desc">
+    <title id="lwm-diagram-title">The same request is retried after its reply is lost</title>
+    <desc id="lwm-diagram-desc">Request A is waiting. No notes are saved.</desc>
+  </svg>
+  <div class="detail" id="lwm-detail" aria-live="polite">Request A · note N1 · waiting to send</div>
+  <div class="viz-controls">
+    <button class="btn" type="button" id="lwm-previous" disabled>Previous</button>
+    <button class="btn btn-primary" type="button" id="lwm-next">Send &amp; save</button>
+    <button class="btn btn-ghost" type="button" id="lwm-replay">Replay</button>
+    <span id="lwm-count" class="text-small tabular-nums">State 1 of 5</span>
+  </div>
+  <span class="text-small">Toy model · one worker · memory retained</span>
+</div>
+<script>
+(() => {
+  const root = document.getElementById('lwm-retry-demo');
+  const q = s => root.querySelector(s);
+  const svg = q('.trace-diagram');
+  const version = q('#lwm-version');
+  const next = q('#lwm-next');
+  const previous = q('#lwm-previous');
+  const detail = q('#lwm-detail');
+  const rule = q('#lwm-rule');
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+  let step = 0;
+  let lastX = null;
+  let activeAnimations = [];
+  const stages = ['Send A', 'Save', 'Lose reply', 'Retry A', 'Retry A'];
+  const captions = [
+    'Request A · note N1 · waiting to send',
+    'Server saved N1 · client still waiting for OK',
+    'OK lost · timeout at client · N1 still saved',
+    'Predict: how many saved notes after retrying A?',
+    ''
+  ];
+  const actions = ['Send & save', 'Lose the reply', 'Prepare retry', 'Reveal retry result', 'Finished'];
+  function draw(animate = false) {
+    activeAnimations.forEach(a => a.cancel());
+    activeAnimations = [];
+    const width = Math.max(240, root.getBoundingClientRect().width);
+    const fixed = version.value === 'after';
+    const count = step === 0 ? 0 : step === 4 && !fixed ? 2 : 1;
+    const x = step === 0 || step === 3 ? 18 : step === 2 ? (width - 106) / 2 : width - 124;
+    const packetLabel = step === 2 ? 'OK × lost' : step === 3 ? 'A → retry' : 'A → N1';
+    const caption = step === 4
+      ? fixed ? '1 note · A already recorded → no second append' : '2 notes · retry A → a second append'
+      : captions[step];
+    const memory = fixed && step > 0 ? 'Remembered IDs: A' : fixed ? 'Remembered IDs: empty' : 'Remembered IDs: none';
+    svg.setAttribute('viewBox', `0 0 ${width} 236`);
+    svg.setAttribute('height', '236');
+    const records = count === 0
+      ? '<text x="18" y="204">empty</text>'
+      : Array.from({length: count}, (_,i) => `<g class="record" data-index="${i}" transform="translate(${18+i*126} 174)"><rect class="note" width="112" height="46" rx="4"></rect><rect class="note-mark" width="4" height="46"></rect><text x="15" y="29">Note N1</text></g>`).join('');
+    svg.innerHTML = `<title id="lwm-diagram-title">Retry after a lost reply</title><desc id="lwm-diagram-desc">${caption}. ${count} saved notes. ${memory}.</desc>
+      <text x="18" y="25">Client</text><text x="${width-18}" y="25" text-anchor="end">Server</text>
+      <path class="wire" d="M 18 79 H ${width-18}"></path>
+      <g class="request-packet" transform="translate(${x} 60)"><rect class="packet" width="106" height="38" rx="4"></rect><text class="packet-label" x="53" y="25" text-anchor="middle">${packetLabel}</text></g>
+      <text x="${width-18}" y="131" text-anchor="end">${memory}</text>
+      <text x="18" y="157">Saved notes</text>${records}`;
+    if (animate && !reduced.matches && lastX !== null && lastX !== x) {
+      const packet = svg.querySelector('.request-packet');
+      activeAnimations.push(packet.animate([
+        { transform: `translate(${lastX}px, 60px)` },
+        { transform: `translate(${x}px, 60px)` }
+      ], { duration: 650, easing: 'ease-in-out' }));
+    }
+    lastX = x;
+    detail.textContent = caption;
+    rule.textContent = fixed ? 'on A: if unseen(A), append(N1) and remember(A)' : 'on request A: append(note N1)';
+    previous.disabled = step === 0;
+    next.disabled = step === 4;
+    next.textContent = actions[step];
+    q('#lwm-count').textContent = `State ${step+1} of 5`;
+    root.querySelectorAll('[data-stage]').forEach(el => {
+      if (Number(el.dataset.stage) === Math.min(step,3)) el.setAttribute('aria-current','step');
+      else el.removeAttribute('aria-current');
+    });
+  }
+  previous.addEventListener('click', () => { if (step > 0) { step--; draw(true); } });
+  next.addEventListener('click', () => { if (step < 4) { step++; draw(true); } });
+  q('#lwm-replay').addEventListener('click', () => { step = 0; draw(false); });
+  version.addEventListener('change', () => { step = 0; draw(false); });
+  reduced.addEventListener('change', () => draw(false));
+  new ResizeObserver(() => draw(false)).observe(root);
+  draw(false);
+})();
+</script>
+<details><summary>Toy-model boundary</summary><p>This example assumes one serialized worker and retained memory. It illustrates the connection between lost replies and duplicate writes. Concurrent workers, crashes, and persistence need additional mechanisms; this pseudocode is not a production idempotency implementation.</p></details>
+</main>
+</body>
+</html>

@@ -1,0 +1,15 @@
+repos:
+  - repo: local
+    hooks:
+      - id: check-shareable-package
+        name: Check package boundaries, references and sensitive patterns
+        entry: python3 tools/check_package.py
+        language: system
+        pass_filenames: false
+        always_run: true
+      - id: helper-tests
+        name: Run helper tests without network or synthesis
+        entry: python3 -m unittest discover -s tests -v
+        language: system
+        pass_filenames: false
+        always_run: true

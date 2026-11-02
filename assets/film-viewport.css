@@ -1,0 +1,72 @@
+html.motion-document,body.motion-view{height:100%;overflow:hidden;overscroll-behavior:none}
+body.motion-view{margin:0}
+body.motion-view main.motion-app{width:100%;max-width:none;height:100vh;height:100dvh;margin:0;padding:12px 20px;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+.motion-app .app-header{display:flex;align-items:center;gap:14px;flex:none;min-height:32px;z-index:2}
+.motion-app .app-header h1{font:400 23px/1.2 var(--serif);margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.motion-app .stage{flex:1;min-height:0;min-width:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.motion-app .film{flex:none;border:0}
+.motion-app .caption{max-width:none;margin:0;text-align:center;justify-content:center}
+.motion-app .edition{font-size:11px;color:var(--muted)}
+.motion-app .controls{flex:none;width:min(1100px,100%);align-self:center;padding:0}
+.motion-app .controls .row{gap:8px;flex-wrap:nowrap}
+.motion-app .controls input[type=range]{display:block;height:14px;margin:0 0 5px}
+.motion-app #replay,.motion-app #fullscreen{width:38px;padding:6px}
+.motion-app #voice{display:none}
+.motion-app #playback-error{margin:0;font-size:12px}
+.motion-app .menu{position:relative;border:0;padding:0;margin:0;max-width:none}
+.motion-app .menu>summary{list-style:none;font:14px var(--sans);padding:5px 9px;border:1px solid var(--rule);border-radius:2px}
+.motion-app .menu>summary::-webkit-details-marker{display:none}
+.motion-app .menu[open]>summary{border-color:var(--ink)}
+.motion-app .menu-content,.motion-app .chapters{position:absolute;right:0;top:calc(100% + 8px);background:var(--paper);border:1px solid var(--rule);padding:12px;box-shadow:0 8px 30px #282c2910;min-width:240px;max-width:min(420px,calc(100vw - 24px));max-height:70dvh;overflow:auto;display:flex;flex-direction:column;align-items:stretch;gap:4px}
+.motion-app .menu-content button,.motion-app .chapters button{text-align:left;padding:8px;border:0;font-size:14px}
+.motion-app .menu-content button:hover,.motion-app .chapters button:hover{background:#eeeadf}
+.motion-app .chapters button[aria-current]{border-left:2px solid var(--green);color:var(--ink)}
+.motion-app .menu-content .meta{font-size:12px;max-width:280px;margin:10px 8px}
+.motion-app .menu-content a{padding:8px;font-size:14px}
+.motion-app dialog{position:fixed;inset:0;margin:auto;padding:0;width:min(940px,calc(100vw - 28px));height:min(780px,calc(100dvh - 28px));max-width:none;max-height:none;border:1px solid var(--rule);background:var(--paper);color:var(--ink);overflow:hidden}
+.motion-app dialog::backdrop{background:#282c2966}
+.motion-app dialog[open]{display:grid;grid-template-rows:auto auto minmax(0,1fr)}
+.motion-app .resource-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 24px;border-bottom:1px solid var(--rule)}
+.motion-app .resource-header h2{font:400 25px var(--serif);margin:0}
+.motion-app .resource-tabs{display:flex;gap:8px;padding:10px 24px;overflow:auto;flex:none}
+.motion-app .resource-tabs button{border-color:transparent;white-space:nowrap}
+.motion-app .resource-tabs button[aria-current]{border-color:var(--ink)}
+.motion-app .resource-body{min-height:0;overflow:auto;overscroll-behavior:contain;padding:0 24px 28px}
+.motion-app .resource-panel,.motion-app .explore{margin:0;max-width:none}
+.motion-app .resource-panel>h2{font-size:24px;margin-top:14px}
+.motion-app .resource-panel[hidden]{display:none}
+.motion-app #resource-transcript button{scroll-margin:20px}
+.motion-app .controls .clock{white-space:nowrap}
+.motion-app:fullscreen{background:var(--paper);width:100%;height:100dvh}
+@media(max-width:760px){
+ body.motion-view main.motion-app{padding:8px 12px;gap:6px}
+ .motion-app .app-header{gap:6px;min-height:30px}
+ .motion-app .app-header h1{font-size:18px}
+ .motion-app .menu>summary{font-size:12px;padding:5px 7px}
+ .motion-app .controls .row{gap:4px}
+ .motion-app .controls button,.motion-app .controls select{font-size:12px;padding:5px 7px}
+ .motion-app #play{min-width:68px}
+ .motion-app #replay,.motion-app #fullscreen{width:32px;padding:4px}
+ .motion-app .clock{font-size:11px;margin-left:auto}
+ .motion-app .skip{display:none}
+ .motion-app .resource-header{padding:12px 16px}
+ .motion-app .resource-tabs{padding:8px 12px;gap:0}
+ .motion-app .resource-tabs button{font-size:13px;padding:6px 8px}
+ .motion-app .resource-body{padding:0 16px 20px}
+}
+@media(max-width:760px) and (min-height:500px){
+ body.motion-view:not(.export) .film{display:grid;grid-template-rows:minmax(0,1fr) auto;align-items:stretch;aspect-ratio:auto}
+ body.motion-view:not(.export) #scene{width:100%;height:100%;aspect-ratio:auto;min-height:0}
+ body.motion-view:not(.export) .caption{position:static;left:auto;right:auto;bottom:auto;min-height:0;padding:6px 0 8px;font:400 18px/1.32 var(--serif);max-width:100%}
+}
+@media(max-width:760px) and (max-height:499px){
+ body.motion-view:not(.export) .film{aspect-ratio:16/9}
+ body.motion-view:not(.export) #scene{aspect-ratio:auto;height:100%}
+ body.motion-view:not(.export) .caption{position:absolute;left:6%;right:6%;bottom:5%;min-height:2.7em;padding:0;font:400 1.95cqw/1.35 var(--serif);place-content:end center}
+}
+body.motion-view.export main.motion-app{display:block!important;max-width:none;width:1280px;height:720px;margin:0;padding:0;overflow:hidden}
+body.motion-view.export .app-header,body.motion-view.export .controls,body.motion-view.export dialog{display:none!important}
+body.motion-view.export .stage{display:block;width:1280px;height:720px;overflow:hidden}
+body.motion-view.export .film{display:block!important;position:relative!important;width:1280px!important;height:720px!important;aspect-ratio:auto;border:0}
+body.motion-view.export #scene{width:100%;height:100%;aspect-ratio:auto}
+body.motion-view.export .caption{position:absolute;left:6%;right:6%;bottom:5%;padding:0;min-height:2.7em;font:400 1.95cqw/1.35 var(--serif);place-content:end center}
