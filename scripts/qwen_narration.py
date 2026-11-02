@@ -69,11 +69,57 @@ def load_cues(path, limit=None):
             raise ValueError('Cue IDs must contain only letters, digits, hyphens and underscores.')
         if not isinstance(cue.get('text'), str) or not canonical(cue['text']):
             raise ValueError('Each cue needs nonempty English text.')
+        validate_bookmarks(cue['text'], cue.get('bookmarks', {}))
     if len({cue['id'] for cue in cues}) != len(cues):
         raise ValueError('Cue IDs must be unique.')
     if limit is not None and limit < 1:
         raise ValueError('--limit must be positive.')
     return cues[:limit] if limit is not None else cues
+
+
+def validate_bookmarks(text, bookmarks):
+    """Find unique script phrases before spending time on synthesis."""
+    if not isinstance(bookmarks, dict):
+        raise ValueError('Bookmarks must map names to unique phrases in the cue text.')
+    tokens, spans = canonical(text), {}
+    for name, phrase in bookmarks.items():
+        if not isinstance(name, str) or not re.fullmatch(r'[A-Za-z0-9_-]+', name):
+            raise ValueError('Bookmark names use letters, digits, hyphens and underscores.')
+        needle = canonical(phrase) if isinstance(phrase, str) else []
+        matches = [i for i in range(len(tokens) - len(needle) + 1)
+                   if needle and tokens[i:i + len(needle)] == needle]
+        if len(matches) != 1:
+            raise ValueError(f'Bookmark {name!r} must match exactly one script phrase; found {len(matches)}.')
+        spans[name] = (matches[0], matches[0] + len(needle))
+    return spans
+
+
+def cache_key(identity):
+    return hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()[:24]
+
+
+def speech_identity(text, settings):
+    # Stable when a cue is renamed, moved, or preceded by a newly inserted cue.
+    seed = int(hashlib.sha256(f"{settings['seed']}:{text}".encode()).hexdigest()[:8], 16)
+    return {'text': text, 'settings': settings, 'cue_seed': seed, 'cache_version': 2}
+
+
+def alignment_identity(speech_key, audio_hash, settings):
+    return {'speech_key': speech_key, 'audio_sha256': audio_hash, 'settings': settings}
+
+
+def file_digest(path):
+    digest = hashlib.sha256()
+    with path.open('rb') as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b''):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def write_json(path, value):
+    staged = path.with_suffix(path.suffix + '.next')
+    staged.write_text(json.dumps(value, indent=2) + '\n')
+    staged.replace(path)
 
 
 def model_identity(directory):
@@ -96,21 +142,16 @@ def model_identity(directory):
     return {'sha256': digest.hexdigest(), 'files': len(files)}
 
 
-def align(text, words, seconds):
-    """Estimate sentence boundaries; do not replace the script with ASR text."""
-    chunks = re.split(r'(?<=[.!?])\s+', text.strip())
-    tokens, bounds = [], []
-    for chunk in chunks:
-        begin = len(tokens)
-        tokens.extend(canonical(chunk))
-        if begin == len(tokens):
-            raise ValueError('A sentence contains no alignable English words.')
-        bounds.append((begin, len(tokens)))
+def word_alignment(text, words, seconds):
+    """Map known script words to ASR times; missing words remain estimates."""
+    tokens = canonical(text)
     observed, times = [], []
     for index, word in enumerate(words):
         # Whisper can emit both a redundant zero and a decimal fragment.
         if word['word'].strip() == '0' and index + 1 < len(words) and words[index + 1]['word'].lstrip().startswith('.'):
             continue
+        if not (0 <= word['start'] <= word['end'] <= seconds + .15):
+            raise ValueError('Invalid ASR word timing; inspect the saved alignment.')
         for token in canonical(word['word']):
             observed.append(token)
             times.append((word['start'], word['end']))
@@ -135,15 +176,6 @@ def align(text, words, seconds):
         a, b = times[mapping[left]][1], times[mapping[right]][0]
         return a + (b - a) * (index - left) / (right - left)
 
-    sentences = []
-    for chunk, (begin, end) in zip(chunks, bounds):
-        start = max(0, min(seconds, boundary(begin)))
-        finish = min(seconds, max(start + .04, boundary(end - 1, True)))
-        if not math.isfinite(start + finish) or finish <= start:
-            raise ValueError('Invalid sentence timing; inspect the saved alignment.')
-        sentences.append({'text': chunk, 'start': round(start, 4), 'end': round(finish, 4)})
-    if any(a['end'] > b['start'] + .15 for a, b in zip(sentences, sentences[1:])):
-        raise ValueError('Overlapping sentence timing; inspect the saved alignment.')
     differences = [
         {'source': ' '.join(tokens[a:b]), 'heard': ' '.join(observed[c:d])}
         for op, a, b, c, d in matcher.get_opcodes() if op != 'equal'
@@ -153,7 +185,40 @@ def align(text, words, seconds):
         'differences': differences, 'source_word_count': len(tokens),
         'recognized_word_count': len(observed),
     }
+    return boundary, agreement
+
+
+def align(text, words, seconds):
+    """Estimate sentence boundaries; do not replace the script with ASR text."""
+    boundary, agreement = word_alignment(text, words, seconds)
+    sentences, offset = [], 0
+    for chunk in re.split(r'(?<=[.!?])\s+', text.strip()):
+        count = len(canonical(chunk))
+        if not count:
+            raise ValueError('A sentence contains no alignable English words.')
+        start = max(0, min(seconds, boundary(offset)))
+        finish = min(seconds, max(start + .04, boundary(offset + count - 1, True)))
+        if not math.isfinite(start + finish) or finish <= start:
+            raise ValueError('Invalid sentence timing; inspect the saved alignment.')
+        sentences.append({'text': chunk, 'start': round(start, 4), 'end': round(finish, 4)})
+        offset += count
+    if any(a['end'] > b['start'] + .15 for a, b in zip(sentences, sentences[1:])):
+        raise ValueError('Overlapping sentence timing; inspect the saved alignment.')
     return sentences, agreement
+
+
+def resolve_landmarks(text, words, seconds, bookmarks):
+    spans = validate_bookmarks(text, bookmarks)
+    if not spans:
+        return {}
+    boundary, _ = word_alignment(text, words, seconds)
+    landmarks = {}
+    for name, (start, end) in spans.items():
+        a, b = boundary(start), boundary(end - 1, True)
+        if not (math.isfinite(a + b) and 0 <= a < b <= seconds):
+            raise ValueError(f'Invalid timing for bookmark {name!r}; inspect the alignment.')
+        landmarks[name] = {'start': round(a, 4), 'end': round(b, 4)}
+    return landmarks
 
 
 def check_wav(path):
@@ -173,66 +238,83 @@ def generate(args):
     import numpy as np
     import soundfile as sf
 
-    settings = {
+    tts_settings = {
         'engine': 'mlx-audio', 'version': importlib.metadata.version('mlx-audio'),
         'model': 'Qwen3-TTS-12Hz-1.7B-CustomVoice-bf16', 'model_identity': tts_identity,
-        'asr_identity': asr_identity, 'asr_version': importlib.metadata.version('faster-whisper'),
         'speaker': args.speaker, 'language': 'English', 'instruct': args.instruct,
         'temperature': .7, 'top_p': 1., 'top_k': 50, 'repetition_penalty': 1.05,
         'max_tokens': 1800, 'seed': 731, 'synthesis_unit': 'complete cue paragraph',
-        'alignment_version': 4, 'asr_prompt': args.asr_prompt,
+    }
+    asr_settings = {
+        'asr_identity': asr_identity, 'asr_version': importlib.metadata.version('faster-whisper'),
+        'alignment_version': 5, 'asr_prompt': args.asr_prompt, 'language': 'en',
+        'beam_size': 5, 'word_timestamps': True, 'condition_on_previous_text': False,
+        'vad_filter': False, 'temperature': 0, 'compute_type': 'int8',
     }
     args.out_dir.mkdir(parents=True, exist_ok=True)
     model = asr = None
     segments, begun = [], time.monotonic()
-    for index, cue in enumerate(cues):
-        identity = {'text': cue['text'], **settings, 'cue_seed': settings['seed'] + index}
-        key = hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()[:24]
-        directory = args.out_dir / key
-        directory.mkdir(exist_ok=True)
-        wav, metadata = directory / 'speech.wav', directory / 'segment.json'
-        cached = wav.is_file() and metadata.is_file()
-        if cached:
-            value = json.loads(metadata.read_text())
-            if value['text'] != cue['text'] or abs(check_wav(wav) - value['seconds']) > 1 / 44100:
-                raise ValueError('Cache metadata differs from the audio/script; preserve it for inspection.')
+    for cue in cues:
+        identity = speech_identity(cue['text'], tts_settings)
+        speech_key = cache_key(identity)
+        directory = args.out_dir / 'speech' / speech_key
+        directory.mkdir(parents=True, exist_ok=True)
+        wav, metadata = directory / 'speech.wav', directory / 'synthesis.json'
+        speech_cached = wav.is_file() and metadata.is_file()
+        if speech_cached:
+            stats = json.loads(metadata.read_text())
+            if (stats['identity'] != identity or file_digest(wav) != stats['audio_sha256']
+                    or abs(check_wav(wav) - stats['seconds']) > 1 / 44100):
+                raise ValueError('Speech cache differs from its identity/audio; preserve it for inspection.')
         else:
-            if not wav.exists():
-                import mlx.core as mx
-                if model is None:
-                    from mlx_audio.tts.utils import load_model
-                    print(json.dumps({'loading_local_model': True}), flush=True)
-                    model = load_model(str(args.model_path))
-                mx.random.seed(settings['seed'] + index)
-                tick = time.monotonic()
-                results = list(model.generate_custom_voice(
-                    text=cue['text'], speaker=args.speaker, language='English',
-                    instruct=args.instruct, stream=False, temperature=settings['temperature'],
-                    top_p=settings['top_p'], top_k=settings['top_k'],
-                    repetition_penalty=settings['repetition_penalty'],
-                    max_tokens=settings['max_tokens'], verbose=False,
-                ))
-                if len(results) != 1:
-                    raise ValueError('Expected one complete paragraph, not sentence stitching.')
-                result = results[0]
-                samples, native_rate = np.asarray(result.audio, dtype=np.float32), result.sample_rate
-                if result.token_count >= settings['max_tokens'] - 1:
-                    raise ValueError('Generation reached its token cap; inspect the paragraph length.')
-                if samples.ndim != 1 or len(samples) <= native_rate or not np.isfinite(samples).all() or np.sqrt(np.mean(samples ** 2)) <= .005:
-                    raise ValueError('Speech is too short, invalid, or near-silent.')
-                if np.max(np.abs(samples)) > .99:
-                    samples *= .99 / np.max(np.abs(samples))
-                sf.write(str(directory / 'native.wav'), samples, native_rate, subtype='PCM_16')
-                staged = directory / 'speech.next.wav'
-                subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', str(directory / 'native.wav'),
-                                '-ar', '44100', '-ac', '1', '-c:a', 'pcm_s16le', str(staged)], check=True)
-                staged.replace(wav)
-                stats = {'synthesis_seconds': round(time.monotonic() - tick, 3),
-                         'tokens': result.token_count, 'peak_memory_GB': result.peak_memory_usage}
-                (directory / 'synthesis.json').write_text(json.dumps(stats, indent=2))
-            else:
-                stats = json.loads((directory / 'synthesis.json').read_text())
-            seconds = check_wav(wav)
+            if wav.exists() or metadata.exists():
+                raise ValueError('Incomplete speech cache; preserve it for inspection before retrying.')
+            import mlx.core as mx
+            if model is None:
+                from mlx_audio.tts.utils import load_model
+                print(json.dumps({'loading_local_model': True}), flush=True)
+                model = load_model(str(args.model_path))
+            mx.random.seed(identity['cue_seed'])
+            tick = time.monotonic()
+            results = list(model.generate_custom_voice(
+                text=cue['text'], speaker=args.speaker, language='English',
+                instruct=args.instruct, stream=False, temperature=tts_settings['temperature'],
+                top_p=tts_settings['top_p'], top_k=tts_settings['top_k'],
+                repetition_penalty=tts_settings['repetition_penalty'],
+                max_tokens=tts_settings['max_tokens'], verbose=False,
+            ))
+            if len(results) != 1:
+                raise ValueError('Expected one complete paragraph, not sentence stitching.')
+            result = results[0]
+            samples, native_rate = np.asarray(result.audio, dtype=np.float32), result.sample_rate
+            if result.token_count >= tts_settings['max_tokens'] - 1:
+                raise ValueError('Generation reached its token cap; inspect the paragraph length.')
+            if samples.ndim != 1 or len(samples) <= native_rate or not np.isfinite(samples).all() or np.sqrt(np.mean(samples ** 2)) <= .005:
+                raise ValueError('Speech is too short, invalid, or near-silent.')
+            if np.max(np.abs(samples)) > .99:
+                samples *= .99 / np.max(np.abs(samples))
+            sf.write(str(directory / 'native.wav'), samples, native_rate, subtype='PCM_16')
+            staged = directory / 'speech.next.wav'
+            subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', str(directory / 'native.wav'),
+                            '-ar', '44100', '-ac', '1', '-c:a', 'pcm_s16le', str(staged)], check=True)
+            staged.replace(wav)
+            stats = {'identity': identity, 'audio_sha256': file_digest(wav), 'seconds': check_wav(wav),
+                     'synthesis_seconds': round(time.monotonic() - tick, 3),
+                     'tokens': result.token_count, 'peak_memory_GB': result.peak_memory_usage}
+            write_json(metadata, stats)
+
+        seconds = stats['seconds']
+        alignment = alignment_identity(speech_key, stats['audio_sha256'], asr_settings)
+        align_dir = args.out_dir / 'alignments' / cache_key(alignment)
+        align_dir.mkdir(parents=True, exist_ok=True)
+        align_meta, words_path = align_dir / 'segment.json', align_dir / 'asr-words.json'
+        alignment_cached = align_meta.is_file() and words_path.is_file()
+        if alignment_cached:
+            value = json.loads(align_meta.read_text())
+            words = json.loads(words_path.read_text())
+            if value['identity'] != alignment or file_digest(words_path) != value['words_sha256']:
+                raise ValueError('Alignment cache differs from its identity/words; preserve it for inspection.')
+        else:
             if asr is None:
                 from faster_whisper import WhisperModel
                 asr = WhisperModel(str(args.asr_path), device='cpu', compute_type='int8',
@@ -246,27 +328,30 @@ def generate(args):
             )
             words = [{'word': w.word, 'start': w.start, 'end': w.end, 'probability': w.probability}
                      for segment in recognized for w in (segment.words or [])]
-            (directory / 'asr-words.json').write_text(json.dumps(words, indent=2))
+            write_json(words_path, words)
             sentences, agreement = align(cue['text'], words, seconds)
             value = {'text': cue['text'], 'seconds': seconds, 'sentences': sentences,
-                     'agreement': agreement, 'settings': settings, **stats}
-            metadata.write_text(json.dumps(value, indent=2) + '\n')
+                     'agreement': agreement, 'identity': alignment, 'words_sha256': file_digest(words_path)}
+            write_json(align_meta, value)
+        cached = speech_cached and alignment_cached
         segments.append({'id': cue['id'], 'text': cue['text'], 'path': str(wav.resolve()),
                          'seconds': value['seconds'], 'sentences': value['sentences'],
                          'agreement': value['agreement'], 'cached': cached,
-                         'synthesis_seconds': value['synthesis_seconds']})
+                         'speech_cached': speech_cached, 'alignment_cached': alignment_cached,
+                         'landmarks': resolve_landmarks(cue['text'], words, seconds, cue.get('bookmarks', {})),
+                         'synthesis_seconds': stats['synthesis_seconds']})
         print(json.dumps({'cue': cue['id'], 'seconds': round(value['seconds'], 3),
-                          'agreement': value['agreement']['agreement'], 'cached': cached}), flush=True)
+                          'agreement': value['agreement']['agreement'], 'cached': cached,
+                          'speech_cached': speech_cached, 'alignment_cached': alignment_cached}), flush=True)
     manifest = {
-        'provider': 'Qwen3-TTS (local MLX)', 'model': settings['model'], 'voice_id': args.speaker,
-        'settings': settings, 'segments': segments, 'elapsed_seconds': round(time.monotonic() - begun, 3),
+        'provider': 'Qwen3-TTS (local MLX)', 'model': tts_settings['model'], 'voice_id': args.speaker,
+        'settings': {'speech': tts_settings, 'alignment': asr_settings},
+        'segments': segments, 'elapsed_seconds': round(time.monotonic() - begun, 3),
         'cloud_synthesis_requests': 0,
         'timing': 'ASR-estimated word timestamps aligned to the known script; sentence boundaries approximate.',
     }
     target = args.out_dir / ('sample-manifest.json' if args.limit else 'manifest.json')
-    staged = target.with_suffix('.json.next')
-    staged.write_text(json.dumps(manifest, indent=2) + '\n')
-    staged.replace(target)
+    write_json(target, manifest)
     print(json.dumps({'done': True, 'cues': len(segments), 'manifest': str(target)}), flush=True)
 
 

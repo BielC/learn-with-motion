@@ -28,6 +28,8 @@ The usual failure is a film whose captions do the reasoning while the picture su
 
 Then storyboard each beat as: the claim, the visual evidence to inspect or the change to follow, and the source line that supports it. A held frame is useful when it gives the learner time to trace a relationship, read an equation or compare states. Twenty to thirty seconds of stillness can be appropriate; there is no duration ceiling that establishes a quality failure. Add motion when it exposes a missing operation or connection, rather than to meet an activity quota. A short representative slice is a good test of a new direction before building a full film.
 
+In those same notes, identify a plausible wrong reading of the important diagrams and how the picture prevents it. For example, a lost reply must not look like a failed server operation. Distinguish literal relationships from schematic spacing, invented values or metaphors when that difference affects the explanation. This is a small addition to the existing storyboard review, not a new planning document or a requirement to invent a misconception for every shot.
+
 ## Stage the mechanism
 
 - Establish useful orientation, then introduce internal detail as it becomes relevant. Avoid front-loading every implementation detail. Separate diagrams are appropriate for distinct questions or aspects; switching views does not need a continuous geometric transformation.
@@ -47,6 +49,8 @@ Keep source links, commit hashes, provider metadata, production notes and detail
 ## Narration and one source of time
 
 Keep a cue table with script, start, measured voice duration and scene timing, and derive animation times from it. Prefer pre-generated local audio over browser speech synthesis; label synthetic narration honestly and do not claim to have judged a voice you could not hear. Captions must make the film usable without sound.
+
+For a reveal tied to a spoken phrase, use a named landmark from the narration manifest rather than a sentence's list position. Resolve and validate all referenced landmarks before rendering; missing names, ambiguous phrases and out-of-range times are errors, never a fallback to scene start. Add the cue's timeline start to its local landmark time. These are estimated speech times, so inspect the decisive reveal after export. The Qwen helper supports optional phrase bookmarks without changing the spoken text or requiring a new scene framework; see [narration.md](narration.md).
 
 Use one master clock. In the HTML player, audio time can drive a pure `render(t)`; play/pause, seek and speed then stay synchronized, and seeking backwards works. For export, render each frame at its exact timestamp and mux the same narration; suspend audio-driven rendering while the export clock owns the scene, because queued media events can overwrite frames. A real-time screen recording is not a deterministic export.
 

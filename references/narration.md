@@ -27,9 +27,17 @@ hf download Systran/faster-whisper-small.en --local-dir ./models/whisper
 
 If the skill was installed inside an agent's skills directory, resolve these files relative to that skill directory. The surrounding output, virtualenv and model directories can be anywhere suitable on the authoring machine. A short `--limit 1` run produces `sample-manifest.json` for checking a new direction before generating the whole script.
 
-The helper validates cue IDs and existing local paths, rejects clipped/near-silent output, and caches by text, model identity and synthesis/alignment settings. It fingerprints local model artifacts; first use of a large model can therefore take time. Changing the contents of a model directory invalidates that cache identity. Outputs include the script and absolute local audio paths, so keep output manifests private unless reviewed for sharing.
+The helper validates cue IDs and existing local paths and rejects truncated, invalid or near-silent output. Speech and alignment have separate content-addressed caches. Exact text, TTS model content, engine version and voice settings identify speech; its seed is independent of cue position or ID. Inserting, reordering or renaming cues reuses unchanged speech. ASR model/prompt or alignment changes rebuild timing only. Bookmark, caption and visual changes reuse both. Changing text or voice settings regenerates the affected speech. Model fingerprinting reads local artifacts and can take time.
+
+Cache schema 2 stores WAVs under `speech/` and timing under `alignments/`. Older flat caches remain untouched and are not automatically migrated. The manifest now separates `settings.speech` and `settings.alignment`, while preserving cue paths, durations and sentences. Each segment reports `speech_cached` and `alignment_cached`; `cached` means both were reused. Cache integrity mismatches stop with an error. Outputs include scripts and absolute local paths, so keep manifests private unless reviewed for sharing.
 
 The manifest is `{provider, model, voice_id, settings, segments}`. Each segment includes `{id, text, path, seconds, sentences:[{text,start,end}]}`. Sentence times are ASR estimates, not exact measurements. Derive scene timing from them and deliberate holds, and split subtitles into centered phrases afterward. Review invalid/out-of-range animation landmarks as errors rather than silently mapping them to scene start. Twenty to thirty seconds of useful stillness is acceptable.
+
+### Optional phrase bookmarks
+
+For a reveal that must follow a spoken phrase, add a `bookmarks` map to its cue. Each name maps to a unique phrase in that paragraph, for example `"bookmarks": {"reply_lost": "its reply is lost"}`. The [synthetic narration example](../examples/narration.json) demonstrates it. Matching ignores case and punctuation and normalizes English numbers; missing or repeated phrases fail before synthesis. Use a longer unique phrase to disambiguate. Do not insert markup into the spoken text.
+
+The segment's `landmarks.reply_lost` contains `{start, end}` in seconds relative to that cue's WAV. Times are aligned estimates, including interpolation for unrecognized words. They survive sentence insertion without renumbering references, but edited speech still needs synthesis and alignment. Validate every scene reference and add the cue's master-timeline offset explicitly; a missing name must throw instead of using `?? 0`. Bookmark edits alone do not regenerate speech or ASR. This feature is optional and does not impose a scene schema on another renderer.
 
 ## Optional lightweight Kokoro
 

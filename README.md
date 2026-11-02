@@ -63,3 +63,5 @@ With pre-commit installed, `pre-commit run --all-files` runs the package and hel
 ## License and references
 
 [MIT](LICENSE) for the skill's instructions and code. Third-party models, voices, source material and media have separate licenses. Production references acknowledge [Brag](https://github.com/latent-spaces/brag); no Brag media is bundled. The skill takes inspiration from explanatory animation, including 3Blue1Brown, without claiming affiliation.
+
+[Peer skill research](references/peer-research.md) records the inspected revisions, useful ideas, rejected constraints and resulting improvements. It is background research, not additional reading required for every lesson.

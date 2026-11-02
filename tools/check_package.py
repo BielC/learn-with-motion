@@ -17,6 +17,7 @@ ALLOWED = {
     'references/animation-design.md', 'references/film-direction.md',
     'references/html-output.md', 'references/narration.md',
     'references/player-runtime.md', 'references/production-craft.md',
+    'references/peer-research.md',
     'references/source-patterns.md', 'references/visual-patterns.md',
     'scripts/elevenlabs_narration.py', 'scripts/kokoro_narration.py',
     'scripts/qwen_narration.py', 'tools/check_package.py', 'tests/test_helpers.py',

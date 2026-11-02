@@ -64,6 +64,59 @@ class NarrationTests(unittest.TestCase):
         self.assertEqual(qwen.canonical('0.8'), qwen.canonical('point eight'))
         self.assertEqual(qwen.canonical('128'), qwen.canonical('one hundred twenty eight'))
 
+    def test_bookmarks_resolve_to_spoken_phrase_and_survive_sentence_insertion(self):
+        phrase = {'lost_reply': 'the reply is lost'}
+        for prefix in ['', 'The server commits. ']:
+            text = prefix + 'The request succeeds. The reply is lost.'
+            words = [{'word': w, 'start': i * .5, 'end': i * .5 + .4}
+                     for i, w in enumerate(text.split())]
+            marks = qwen.resolve_landmarks(text, words, 10, phrase)
+            offset = len(prefix.split()) * .5
+            self.assertEqual(marks['lost_reply'], {'start': offset + 1.5, 'end': offset + 3.4})
+
+    def test_missing_ambiguous_and_empty_bookmarks_fail_before_synthesis(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / 'script.json'
+            for bookmarks in [{'retry': 'missing phrase'}, {'retry': 'retry'}, {'retry': ''}, []]:
+                path.write_text(json.dumps([{'id': 'retry', 'text': 'Retry now. Retry later.',
+                                             'bookmarks': bookmarks}]))
+                with self.assertRaisesRegex(ValueError, 'Bookmark'):
+                    qwen.load_cues(path)
+
+    def test_invalid_word_timestamps_rejected(self):
+        for start, end in [(-1, .2), (1, .5), (0, float('nan')), (0, 9)]:
+            with self.assertRaisesRegex(ValueError, 'ASR word timing'):
+                qwen.resolve_landmarks('Hello.', [{'word': 'Hello', 'start': start, 'end': end}],
+                                       2, {'hello': 'Hello'})
+
+    def test_reordering_or_renaming_cues_preserves_speech_cache(self):
+        settings = {'seed': 731, 'speaker': 'Ryan', 'model_identity': 'first'}
+        original = [{'id': 'first', 'text': 'Hello.'}, {'id': 'second', 'text': 'Goodbye.'}]
+        revised = [{'id': 'new', 'text': 'Welcome.'}, {'id': 'renamed', 'text': 'Goodbye.'}, original[0]]
+        keys = lambda cues: {c['text']: qwen.cache_key(qwen.speech_identity(c['text'], settings)) for c in cues}
+        before, after = keys(original), keys(revised)
+        self.assertTrue(all(before[text] == after[text] for text in before))
+        identity = qwen.speech_identity('Hello.', settings)
+        self.assertNotEqual(identity['cue_seed'], qwen.speech_identity('Goodbye.', settings)['cue_seed'])
+
+    def test_text_voice_or_weights_invalidate_speech(self):
+        settings = {'seed': 731, 'speaker': 'Ryan', 'model_identity': 'first'}
+        before = qwen.cache_key(qwen.speech_identity('Hello.', settings))
+        for text, changed in [('Hello!', settings), ('Hello.', {**settings, 'speaker': 'Other'}),
+                              ('Hello.', {**settings, 'model_identity': 'other'})]:
+            self.assertNotEqual(before, qwen.cache_key(qwen.speech_identity(text, changed)))
+
+    def test_asr_changes_invalidate_alignment_and_preserve_speech(self):
+        speech = qwen.cache_key(qwen.speech_identity('Hello.', {'seed': 731, 'speaker': 'Ryan'}))
+        settings = {'asr_prompt': 'English.', 'asr_identity': 'first', 'alignment_version': 5}
+        before = qwen.cache_key(qwen.alignment_identity(speech, 'audio', settings))
+        for changed in [{**settings, 'asr_prompt': 'Technical English.'},
+                        {**settings, 'asr_identity': 'other'}, {**settings, 'alignment_version': 6}]:
+            identity = qwen.alignment_identity(speech, 'audio', changed)
+            self.assertEqual(identity['speech_key'], speech)
+            self.assertNotEqual(before, qwen.cache_key(identity))
+        self.assertNotEqual(before, qwen.cache_key(qwen.alignment_identity(speech, 'changed audio', settings)))
+
 
 class SharingTests(unittest.TestCase):
     def test_unexpected_media_rejected(self):

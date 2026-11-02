@@ -1,6 +1,10 @@
 [
   {
     "id": "retry",
-    "text": "A request can succeed even when its reply is lost. If a client retries, the server needs a way to recognize the same operation. An idempotency key connects those attempts, so a completed operation can return its earlier result rather than performing the change again. This example assumes one serialized worker."
+    "text": "A request can succeed even when its reply is lost. If a client retries, the server needs a way to recognize the same operation. An idempotency key connects those attempts, so a completed operation can return its earlier result rather than performing the change again. This example assumes one serialized worker.",
+    "bookmarks": {
+      "reply_lost": "its reply is lost",
+      "reuse_result": "return its earlier result"
+    }
   }
 ]
