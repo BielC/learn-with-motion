@@ -2,7 +2,7 @@
 
 An agent skill for explaining technical ideas through narrated video. Use it for a PR, paper, article, framework or codebase when a summary gives the big picture but leaves the details disconnected.
 
-Start with what the central idea means, why it is needed, and a concrete situation that makes it useful. Then explain the architecture and design: what each part does, how the parts connect, what changes, and why a choice matters. Use everyday language and explain unfamiliar terms as they become relevant. Numerical examples are optional. Separate diagrams and useful stillness are welcome. A short storyboard review happens before narration.
+Start by explaining the actual subject: what it is, what it does, why it is needed, and where it fits. Ground examples in that subject. Then explain the architecture and design: what each part does, how the parts connect, what changes, and why a choice matters. Use everyday language and explain unfamiliar terms as they become relevant. Numerical examples are optional. Separate diagrams and useful stillness are welcome. A short storyboard review happens before narration.
 
 The default output is an MP4 with narration and centered phrase subtitles. An interactive HTML lesson is available when explicitly requested. The default visual style uses warm paper, dark ink, generous spacing and restrained accents.
 
