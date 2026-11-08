@@ -67,7 +67,7 @@ The helper caches continuous speech with character timestamps and cuts cue WAVs.
 
 ## Verify the delivered artifact
 
-Measure real audio duration. For video, mux that same track, decode the finished file, confirm non-silent narration, and compare its audio against the source track. For explicitly requested HTML, embed essential audio for offline playback and verify pause/seek/speed synchronization. WAVs existing on disk alone do not finish narration integration.
+Measure real audio duration. For video, mux that same track, decode the finished file, confirm non-silent narration, and compare its audio against the source track. WAVs existing on disk alone do not finish narration integration.
 
 ## Provenance and licenses
 

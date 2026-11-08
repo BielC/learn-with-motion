@@ -1,0 +1,4 @@
+interface:
+  display_name: "Explain Interactive"
+  short_description: "Explore technical subjects through interactive HTML"
+  default_prompt: "Use $explain-interactive to explain this subject in a self-contained HTML page with clear background and meaningful, inspectable interactions."

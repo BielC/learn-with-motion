@@ -16,7 +16,7 @@ Reviewed on 2026-11-03 to improve this skill's explanatory craft and production 
 | [Remotion skills](https://github.com/remotion-dev/skills/tree/c7cb2fdcacd134fb2ccb9b7a44f9ffa44e467271/skills) | `remotion-markup/voiceover.md` and `multi-scene-video.md` derive timing from measured audio and account for scene overlap. Selected text/caption guidance also checks real render dimensions. | Existing master-clock and measured-duration workflow covers this. Preserve the chosen local voice and stack rather than inheriting its provider examples. |
 | [video-course](https://github.com/AureClai/claude-code-manim-skills/tree/5844c503b1616ef2f8d79a558cbfa7eedfde1131/video-course) | Unique scene IDs and explicit timing contracts make composition inspectable. Reviewed the skill and part of its schema reference. | Named narration landmarks supply the missing narrow contract. Defer a large course schema until a real multi-lesson need appears. |
 
-[Brag](https://github.com/latent-spaces/brag/tree/669ab9286aa28b6c3ee30e75f181ee74319d012a) was an existing influence, not a new discovery in this comparison. Its source-first examples, reusable scene craft and cheap drafts are already described in [production-craft.md](production-craft.md).
+[Brag](https://github.com/latent-spaces/brag/tree/669ab9286aa28b6c3ee30e75f181ee74319d012a) was an existing influence, not a new discovery in this comparison. Its source-first examples, reusable scene craft and cheap drafts are consolidated in [film-direction.md](../skills/explain-video/references/film-direction.md).
 
 ## Changes made from this comparison
 
@@ -32,7 +32,7 @@ Reviewed both `explain-diff-html.md` and `explain-diff-notion.md` on 2026-11-08 
 
 The useful contribution is the sequence from background through the core idea to implementation. Inspect surrounding code to explain the existing system, establish necessary beginner background before the change-specific context, and group code by an understandable behavior rather than file order. For longer prerequisite explanations, an identifiable background chapter can be skipped by viewers who already know it. Keep this relevant to the actual subject rather than adding a generic course introduction.
 
-Its diagram guidance also transfers: reuse a few suitable visual conventions, include meaningful example content in flows, and use simplified interfaces when explaining UI behavior. Smooth section transitions should explain why the next question follows. These ideas now live in the main skill, [source-patterns.md](source-patterns.md) and [film-direction.md](film-direction.md).
+Its diagram guidance also transfers: reuse a few suitable visual conventions, include meaningful example content in flows, and use simplified interfaces when explaining UI behavior. Smooth section transitions should explain why the next question follows. These ideas now live in [explain-video](../skills/explain-video/SKILL.md), [explain-interactive](../skills/explain-interactive/SKILL.md) and the film-direction reference.
 
 Retain this skill's requested output and teaching choices. The gist's long HTML page, Notion publishing and five multiple-choice questions are not defaults here. Toy data is useful selectively; it does not require numerical examples in every explanation. Summarize definitions or consequential edge cases within the current visual when useful, without adding a permanent callout panel. This is an original adaptation with source attribution, not a copied prompt or a requirement to imitate a named author's prose.
 
@@ -40,4 +40,8 @@ Retain this skill's requested output and teaching choices. The gist's long HTML 
 
 The comparison synthesizes ideas in original prose. No third-party code, prompts, voices, models or media were copied into this package. Most inspected repositories reported MIT licensing in GitHub metadata. License metadata for `gqy20/manim-agent` and `remotion-dev/skills` was inconclusive during this review, so no reuse permission is assumed. Check actual licenses before any future copying. Linked repositories and files may change; the links above pin the inspected revisions.
 
-Keep this note as research provenance. It need not be loaded for ordinary lesson production; the actionable changes live in [film-direction.md](film-direction.md) and [narration.md](narration.md).
+Keep this note as research provenance. It need not be loaded for ordinary lesson production; the actionable changes live in [film-direction.md](../skills/explain-video/references/film-direction.md) and [narration.md](../skills/explain-video/references/narration.md).
+
+## Split into two skills
+
+On 2026-11-08 the package was separated into independently installable video and interactive skills. Repeated film-production guidance was consolidated, guided conversation became an optional interactive reference, and each entrypoint now loads format-specific mechanics only when needed. The historical comparisons above describe the earlier implementation; they are provenance, not extra production instructions. Shared player code is bundled in both packages so either can be installed alone, with a regression check keeping those copies synchronized.

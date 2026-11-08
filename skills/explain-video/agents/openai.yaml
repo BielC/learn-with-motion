@@ -1,0 +1,4 @@
+interface:
+  display_name: "Explain Video"
+  short_description: "Explain technical subjects through narrated video"
+  default_prompt: "Use $explain-video to explain this subject with necessary background, connected diagrams, and narration, then render and verify the MP4."

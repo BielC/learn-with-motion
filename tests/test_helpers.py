@@ -3,6 +3,7 @@
 import importlib.util
 import json
 from pathlib import Path
+import shutil
 import tempfile
 import unittest
 
@@ -16,7 +17,7 @@ def load(name, path):
     return module
 
 
-qwen = load('qwen', 'scripts/qwen_narration.py')
+qwen = load('qwen', 'skills/explain-video/scripts/qwen_narration.py')
 package = load('package', 'tools/check_package.py')
 
 
@@ -32,7 +33,7 @@ class NarrationTests(unittest.TestCase):
                     qwen.load_cues(path)
 
     def test_sample_preserves_paragraph(self):
-        cues = qwen.load_cues(ROOT / 'examples/narration.json', limit=1)
+        cues = qwen.load_cues(ROOT / 'skills/explain-video/examples/narration.json', limit=1)
         self.assertEqual(len(cues), 1)
         self.assertGreater(len(cues[0]['text'].split('. ')), 2)
 
@@ -134,6 +135,33 @@ class SharingTests(unittest.TestCase):
 
     def test_binary_rejected(self):
         self.assertIn('binary content', package.inspect_contents('README.md', b'x\x00y\n'))
+
+
+class PackageLayoutTests(unittest.TestCase):
+    def test_each_skill_has_resolvable_links_when_installed_alone(self):
+        for name in package.PACKAGES:
+            with self.subTest(skill=name), tempfile.TemporaryDirectory() as temp:
+                dest = Path(temp) / name
+                shutil.copytree(ROOT / 'skills' / name, dest)
+                for path in dest.rglob('*.md'):
+                    self.assertEqual(package.markdown_link_failures(path, path.read_text(), dest), [],
+                                     str(path.relative_to(dest)))
+                for relative in package.PACKAGES[name]:
+                    self.assertTrue((dest / relative).is_file(), relative)
+
+    def test_link_to_a_sibling_package_is_rejected_even_if_it_exists(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            skill = root / 'one'
+            skill.mkdir()
+            sibling = root / 'two.md'
+            sibling.write_text('Sibling.\n')
+            failures = package.markdown_link_failures(skill / 'SKILL.md', '[other](../two.md)', skill)
+            self.assertEqual(failures, ['local reference escapes distribution boundary'])
+
+    def test_bundled_player_stays_identical_between_packages(self):
+        paths = [ROOT / 'skills' / name / 'assets/film-player.js' for name in package.PACKAGES]
+        self.assertEqual(paths[0].read_bytes(), paths[1].read_bytes())
 
 
 if __name__ == '__main__':

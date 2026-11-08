@@ -1,4 +1,0 @@
-interface:
-  display_name: "Learn with Motion"
-  short_description: "Connect the big picture to the details, step by step"
-  default_prompt: "Use $learn-with-motion to make a narrated video explaining this topic's architecture and design clearly, choosing relevant depth and diagrams and reviewing the storyboard before narration; create HTML only if I request it."

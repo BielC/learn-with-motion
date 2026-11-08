@@ -1,6 +1,6 @@
 # Reusable film player
 
-For a film authored in HTML/SVG, [assets/film-player.js](../assets/film-player.js) can supply the audio clock and exclusive deterministic export clock inside an internal rendering document. The default deliverable is the rendered video; this asset does not require a user-facing HTML page or player controls. When HTML is requested ad hoc, inline it into that page to reuse playback, reverse seeking, keyboard handling and reduced-motion context. Adapt scenes and layout instead of rewriting these mechanics. It has no network or package dependencies. A manual step-through lesson does not need it.
+For a timed HTML/SVG explanation, inline [film-player.js](../assets/film-player.js) to reuse playback, reverse seeking, keyboard handling and reduced-motion context. Adapt scenes and layout instead of rewriting these mechanics. It has no network or package dependencies. A manual step-through lesson does not need this player.
 
 Keep source-grounded lesson data and a pure scene renderer separate from the player:
 
@@ -25,13 +25,13 @@ window.lessonInspection = createMotionPlayer({
 });
 ```
 
-Default optional control IDs are `play`, `replay`, `seek`, `back`, `forward`, `speed`, `voice`, `clock`, and `caption`. For a requested user-facing page, use semantic buttons, a labeled range input, and a speed select. Include 0.8× and 0.9× alongside 1× and the other offered speeds; these offer finer slow-playback control. Override individual elements with `controls: {play: anotherButton}`. The page owns any styling, chapter navigation, source links, transcript, and changed-input experiments. Keep those experiments outside the narrated sequence. Omit user-facing controls and experiments from an internal video-only rendering target when unnecessary.
+Default optional control IDs are `play`, `replay`, `seek`, `back`, `forward`, `speed`, `voice`, `clock`, and `caption`. Use semantic buttons, a labeled range input, and a speed select. Include 0.8× and 0.9× alongside 1× and the other offered speeds; these offer finer slow-playback control. Override individual elements with `controls: {play: anotherButton}`. The page owns any styling, chapter navigation, source links, transcript, and changed-input experiments. Keep those experiments outside the narrated sequence.
 
 The default caption is `cue.cap`. Supply `captionText(t, frame)` for phrase-level timed subtitles, or `controls: {caption: null}` if the scene renderer owns them. In a silent edition, ensure the full explanation remains available rather than keeping only captions intended to supplement voice, and omit the voice toggle when audio is only a silent clock.
 
 `lessonInspection.frame(t)` seeks the playable page. `exportFrame(t)` pauses playback, cancels its animation loop, adds `body.export`, and gives the export clock exclusive control. Capture frames at `frameNumber / fps`, then mux the same audio track. Pending media events cannot overwrite export frames. `exitExport()` restores paused interactive mode; `destroy()` removes listeners. Do not attach a second audio or animation loop around the player.
 
-The renderer owns the visual argument. This asset does not supply causal scenes, correct source interpretation, responsive composition or video encoding. Preserve an SVG title/description when replacing its contents. Check representative intermediate states, actual narrow-screen label sizes, and decoded video frames as described in [film-direction.md](film-direction.md).
+The renderer owns the visual argument. This asset does not supply causal scenes, correct source interpretation, responsive composition or video encoding. Preserve an SVG title/description when replacing its contents. Check representative intermediate states, actual narrow-screen label sizes, as described in [html-output.md](html-output.md).
 
 ## Single-viewport host
 

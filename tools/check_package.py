@@ -9,19 +9,27 @@ import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-ALLOWED = {
-    '.gitignore', '.pre-commit-config.yaml', 'README.md', 'LICENSE', 'SKILL.md',
-    'requirements-qwen.txt', 'agents/openai.yaml', 'examples/narration.json',
-    'assets/film-player.js', 'assets/film-viewport.js', 'assets/film-viewport.css',
-    'assets/lesson.css', 'assets/retry-trace.html',
-    'references/animation-design.md', 'references/film-direction.md',
-    'references/html-output.md', 'references/narration.md',
-    'references/player-runtime.md', 'references/production-craft.md',
-    'references/peer-research.md',
-    'references/source-patterns.md', 'references/visual-patterns.md',
-    'scripts/elevenlabs_narration.py', 'scripts/kokoro_narration.py',
-    'scripts/qwen_narration.py', 'tools/check_package.py', 'tests/test_helpers.py',
+PACKAGES = {
+    'explain-video': {
+        'SKILL.md', 'LICENSE', 'agents/openai.yaml', 'requirements-qwen.txt',
+        'examples/narration.json', 'assets/film-player.js',
+        'references/film-direction.md', 'references/narration.md',
+        'references/player-runtime.md', 'references/visual-patterns.md',
+        'scripts/elevenlabs_narration.py', 'scripts/kokoro_narration.py',
+        'scripts/qwen_narration.py',
+    },
+    'explain-interactive': {
+        'SKILL.md', 'LICENSE', 'agents/openai.yaml',
+        'assets/film-player.js', 'assets/film-viewport.js',
+        'assets/film-viewport.css', 'assets/lesson.css', 'assets/retry-trace.html',
+        'references/html-output.md', 'references/player-runtime.md',
+        'references/guided-learning.md',
+    },
 }
+ALLOWED = {
+    '.gitignore', '.pre-commit-config.yaml', 'README.md', 'LICENSE',
+    'research/peer-research.md', 'tools/check_package.py', 'tests/test_helpers.py',
+} | {f'skills/{package}/{name}' for package, files in PACKAGES.items() for name in files}
 PATTERNS = {
     'machine-specific home path': r'/(?:Users|home)/[A-Za-z0-9_.-]+/',
     'private network URL': r'https?://(?:localhost|127\.0\.0\.1|10\.[0-9.]+|192\.168\.[0-9.]+|172\.(?:1[6-9]|2\d|3[01])\.[0-9.]+)(?=[:/\s]|$)',
@@ -59,6 +67,23 @@ def candidate_files():
     return sorted(set(p.decode() for p in result.stdout.split(b'\0') if p))
 
 
+def markdown_link_failures(path, content, boundary):
+    """Check local links inside the independently installable package boundary."""
+    failures = []
+    for target in re.findall(r'\[[^\]]*\]\(([^)]+)\)', content):
+        if re.match(r'[A-Za-z][A-Za-z0-9+.-]*:', target) or target.startswith('#'):
+            continue
+        relative = target.split('#')[0]
+        if not relative:
+            continue
+        resolved = (path.parent / relative).resolve()
+        if not resolved.is_relative_to(boundary.resolve()):
+            failures.append('local reference escapes distribution boundary')
+        elif not resolved.is_file():
+            failures.append('broken local reference: ' + relative)
+    return failures
+
+
 def main():
     failures, names = [], candidate_files()
     for name in names:
@@ -72,12 +97,10 @@ def main():
         raw = path.read_bytes()
         failures.extend((name, reason) for reason in inspect_contents(name, raw))
         if path.suffix == '.md':
-            for target in re.findall(r'\[[^\]]*\]\(([^)]+)\)', raw.decode('utf-8')):
-                if re.match(r'[A-Za-z][A-Za-z0-9+.-]*:', target) or target.startswith('#'):
-                    continue
-                relative = target.split('#')[0]
-                if relative and not (path.parent / relative).is_file():
-                    failures.append((name, 'broken local reference: ' + relative))
+            parts = Path(name).parts
+            boundary = ROOT / 'skills' / parts[1] if parts[0] == 'skills' else ROOT
+            failures.extend((name, reason) for reason in
+                            markdown_link_failures(path, raw.decode('utf-8'), boundary))
     missing = ALLOWED - set(names)
     failures.extend((name, 'required distribution file missing') for name in sorted(missing))
     for name, reason in failures:
