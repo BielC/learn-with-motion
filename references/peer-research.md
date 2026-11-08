@@ -26,6 +26,16 @@ Reviewed on 2026-11-03 to improve this skill's explanatory craft and production 
 
 The concrete mechanics have 16 passing offline helper/package tests, including cache invalidation, reorder stability, phrase resolution and invalid timing. A local Qwen smoke test generated 24.64 seconds of synthetic narration. Changing its ASR prompt rebuilt timing while preserving the WAV's hash and modification time; repeat runs, bookmark edits and inserted/renamed cues reused speech and alignment. These checks establish software behavior, not improved attention, teaching quality or preferred voice delivery. A new topic and learner feedback are still needed to assess those outcomes.
 
+## Follow-up: Geoffrey Litt's explain-diff
+
+Reviewed both `explain-diff-html.md` and `explain-diff-notion.md` on 2026-11-08 in the [explain-diff gist at revision 126e7fe9](https://gist.github.com/geoffreylitt/a29df1b5f9865506e8952488eac3d524/126e7fe9eecaafadfe1ac8bb183d135812b608f2). These are explanatory prompts, not evidence of measured learning outcomes.
+
+The useful contribution is the sequence from background through the core idea to implementation. Inspect surrounding code to explain the existing system, establish necessary beginner background before the change-specific context, and group code by an understandable behavior rather than file order. For longer prerequisite explanations, an identifiable background chapter can be skipped by viewers who already know it. Keep this relevant to the actual subject rather than adding a generic course introduction.
+
+Its diagram guidance also transfers: reuse a few suitable visual conventions, include meaningful example content in flows, and use simplified interfaces when explaining UI behavior. Smooth section transitions should explain why the next question follows. These ideas now live in the main skill, [source-patterns.md](source-patterns.md) and [film-direction.md](film-direction.md).
+
+Retain this skill's requested output and teaching choices. The gist's long HTML page, Notion publishing and five multiple-choice questions are not defaults here. Toy data is useful selectively; it does not require numerical examples in every explanation. Summarize definitions or consequential edge cases within the current visual when useful, without adding a permanent callout panel. This is an original adaptation with source attribution, not a copied prompt or a requirement to imitate a named author's prose.
+
 ## Scope and reuse
 
 The comparison synthesizes ideas in original prose. No third-party code, prompts, voices, models or media were copied into this package. Most inspected repositories reported MIT licensing in GitHub metadata. License metadata for `gqy20/manim-agent` and `remotion-dev/skills` was inconclusive during this review, so no reuse permission is assumed. Check actual licenses before any future copying. Linked repositories and files may change; the links above pin the inspected revisions.
