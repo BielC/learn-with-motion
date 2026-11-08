@@ -24,7 +24,7 @@ Let the viewer read and trace a relationship after the relevant material has set
 
 Stage narration, labels and motion so they do not compete. Center phrase subtitles on the film's horizontal midpoint with safe space beneath the diagram. Inspect actual line geometry and reading time. Keep a complete qualification with its claim: splitting “rather than assume relevance ranking establishes what is true” must not leave a standalone caption asserting that ranking establishes truth.
 
-Keep source lines, hashes, provider metadata, audit footers and source end cards off the film. Preserve the selected warm-paper/ink styling. Music and sound effects are optional when requested or useful; speech alone is complete. If used, keep separate stems, duck beneath speech, avoid clipping and inspect the actual mix.
+Keep source-location labels, hashes, provider metadata, audit footers and source end cards off the film. Useful code excerpts remain part of the explanation. Preserve the selected warm-paper/ink styling. Music and sound effects are optional when requested or useful; speech alone is complete. If used, keep separate stems, duck beneath speech, avoid clipping and inspect the actual mix.
 
 ## Iterate cheaply and inspect the delivered film
 

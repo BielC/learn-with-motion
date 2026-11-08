@@ -13,6 +13,8 @@ Read the linked material before planning the explanation. For a named project, e
 
 For a PR, inspect the exact revision, full diff, relevant callers, unchanged dependencies and tests. Explain the existing system, the core idea of the change, and old versus new behavior for the same situation before grouping implementation details by responsibility. For a paper, connect the research question, method, evidence and limits. For a framework, identify its responsibilities and trace a representative operation when helpful.
 
+For implementation changes, normally show the smallest real code excerpts that explain the changed behavior. Establish the behavior first, then connect the relevant expression or operation to its effect in the diagram. Compare before and after where useful. Label simplified pseudocode clearly and preserve consequential conditions and error handling. Omit code when it adds no explanatory value.
+
 Choose a useful scope when the topic is broad. Ask only for missing information that affects the explanation. Preserve the distinction between source claims, inference, verified execution and invented examples. Source pointers belong in authoring notes. Keep confidential sources and all generated lessons outside this skill's repository; access to a source does not authorize publishing it or sending it to a cloud voice service.
 
 ## 2. Build the explanation before producing it
@@ -21,7 +23,7 @@ Establish necessary background, then architecture, then the mechanisms needed to
 
 Read [film-direction.md](references/film-direction.md) to plan and verify the visual argument. In existing authoring notes, record the central question and each section's claim, visible evidence and supporting source. Check that the opening identifies the actual subject, prerequisites precede their use, examples retain their meaning, and each section makes the next question understandable. Cut sections that mainly complete a file inventory or repeat a point. Check important diagrams for plausible wrong readings. This review is part of authoring, not an approval gate.
 
-Use warm paper, dark ink, generous spacing and restrained accents unless another style was chosen. Separate diagrams are welcome. Keep names and example state consistent and explain a change of view. Use motion for an operation or relationship it clarifies. A useful diagram held for twenty to thirty seconds is acceptable. Keep music, decorative motion, source labels and production metadata out of the default watching experience. A complete film must work without answering questions; do not require quizzes or teach-backs.
+Use warm paper, dark ink, generous spacing and restrained accents unless another style was chosen. Separate diagrams are welcome. Keep names and example state consistent and explain a change of view. Use motion for an operation or relationship it clarifies. A useful diagram held for twenty to thirty seconds is acceptable. Keep music, decorative motion, source-location labels and production metadata out of the default watching experience. A complete film must work without answering questions; do not require quizzes or teach-backs.
 
 ## 3. Generate narration and measured timing
 

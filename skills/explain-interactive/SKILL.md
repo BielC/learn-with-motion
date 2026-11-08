@@ -13,6 +13,8 @@ Read the linked material and establish what it is, what it does, who uses it, an
 
 For a PR, inspect the exact revision, full diff and relevant surrounding code. Explain the existing system, the core idea of the change, and old versus new behavior for the same situation. Group code by responsibility. For a paper, connect its question, method, evidence and limits. For a framework, explain boundaries and responsibilities before tracing a representative operation. Mark inference, toy data and unverified behavior accurately. Keep source/version links available within the page, apart from the primary visual.
 
+For implementation changes, normally show the smallest real code excerpts that explain the changed behavior. Establish the behavior first, then connect the relevant expression or operation to its effect in the diagram. Compare before and after where useful. Label simplified pseudocode clearly and preserve consequential conditions and error handling. Omit code when it adds no explanatory value.
+
 Choose a useful scope rather than requiring a prerequisite questionnaire. Keep source snapshots and generated lessons outside the skill repository. Private source access does not authorize publication or sending material to another service.
 
 ## 2. Choose an interaction that explains something
