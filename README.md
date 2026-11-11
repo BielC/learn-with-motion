@@ -36,7 +36,7 @@ Use $explain-interactive to explain this framework in an offline HTML page.
 Let me inspect how a request moves through its components.
 ```
 
-The video skill delivers a film without a companion webpage. The interactive skill creates a page without requiring a video. Produce both only when requested. Guided questions are optional in the interactive skill, and neither format requires quizzes.
+The video skill delivers a film without a companion webpage and uploads the finished video privately to the user's Google Drive, retaining the local file. Drive delivery requires available upload tooling and verified restricted access; local-only delivery can be requested. The interactive skill creates a page without requiring a video. Produce both only when requested. Guided questions are optional in the interactive skill, and neither format requires quizzes.
 
 ## Runtime
 

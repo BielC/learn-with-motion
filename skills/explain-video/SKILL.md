@@ -41,4 +41,6 @@ Inspect decisive states and transition frames, then export the film with its nar
 
 ## 5. Deliver
 
+Upload the verified finished video to the user's selected Google Drive account unless they request local-only delivery. Use a private My Drive location: check the destination's access before uploading, keep General access Restricted, and allow no other collaborators or inherited access. Never enable public, link-wide or domain sharing, or invite recipients. Use available Drive tooling and verify the uploaded file's identity, size and effective permissions before returning its Drive link. Keep the local video too. If upload or privacy verification is unavailable, deliver the local file and explicitly report the incomplete Drive delivery. Do not upload drafts unless requested.
+
 Return the actual video using the host's media display and an absolute file link. Briefly state the scope and material verification limits. Keep source notes available separately. Report authoring usage, voice charges and local rendering separately when cost is requested. Assess teaching quality through the learner's feedback and optional explanation or application, without claiming that the method is optimal or mastery was established.
