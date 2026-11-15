@@ -14,6 +14,7 @@ PACKAGES = {
         'SKILL.md', 'LICENSE', 'agents/openai.yaml', 'requirements-qwen.txt',
         'examples/narration.json', 'assets/film-player.js',
         'references/film-direction.md', 'references/narration.md',
+        'references/writing.md',
         'references/player-runtime.md', 'references/visual-patterns.md',
         'scripts/elevenlabs_narration.py', 'scripts/kokoro_narration.py',
         'scripts/qwen_narration.py',
@@ -23,7 +24,7 @@ PACKAGES = {
         'assets/film-player.js', 'assets/film-viewport.js',
         'assets/film-viewport.css', 'assets/lesson.css', 'assets/retry-trace.html',
         'references/html-output.md', 'references/player-runtime.md',
-        'references/guided-learning.md',
+        'references/guided-learning.md', 'references/writing.md',
     },
 }
 ALLOWED = {

@@ -19,6 +19,8 @@ Choose a useful scope rather than requiring a prerequisite questionnaire. Keep s
 
 ## 2. Choose an interaction that explains something
 
+Read [writing.md](references/writing.md) while drafting the explanation, labels and control text. Revise the argument and sentence flow before building the page. Use concrete actors, consistent terms and conditions attached to their consequences.
+
 Identify the central question and which relationship the learner should be able to inspect. A before/after comparison, step-through trace, selectable case or changed-input experiment can help. Use only controls that expose meaningful differences. Numerical examples are optional. A diagram with clear relationships can be static.
 
 In existing authoring notes, connect each section's claim to visible evidence and its source. Establish prerequisites before use, preserve names and example state across views, and make clear why the next question follows. Separate diagrams are welcome; reuse visual conventions where appropriate. Cut sections that only repeat a point or inventory implementation files. Check important diagrams for misleading interpretations before building the page.

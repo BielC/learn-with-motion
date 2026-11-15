@@ -19,6 +19,8 @@ Choose a useful scope when the topic is broad. Ask only for missing information 
 
 ## 2. Build the explanation before producing it
 
+Read [writing.md](references/writing.md) while drafting. Revise the argument and sentence flow before generating speech, then read the narration aloud or subvocalize it. Use concrete actors, consistent terms and conditions attached to their consequences.
+
 Establish necessary background, then architecture, then the mechanisms needed to answer the central question. Explain why a design produces its observable consequence without claiming undocumented author intent. Omit incidental helpers, dimensions and arithmetic unless they clarify a consequential connection. Numerical examples are optional. Keep substantial beginner background in an identifiable chapter when skipping it would help an informed viewer.
 
 Read [film-direction.md](references/film-direction.md) to plan and verify the visual argument. In existing authoring notes, record the central question and each section's claim, visible evidence and supporting source. Check that the opening identifies the actual subject, prerequisites precede their use, examples retain their meaning, and each section makes the next question understandable. Cut sections that mainly complete a file inventory or repeat a point. Check important diagrams for plausible wrong readings. This review is part of authoring, not an approval gate.
