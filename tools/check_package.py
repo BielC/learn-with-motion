@@ -27,7 +27,7 @@ PACKAGES = {
     },
 }
 ALLOWED = {
-    '.gitignore', '.pre-commit-config.yaml', 'README.md', 'LICENSE',
+    '.gitignore', '.pre-commit-config.yaml', 'README.md', 'CONTRIBUTING.md', 'LICENSE',
     'research/peer-research.md', 'tools/check_package.py', 'tests/test_helpers.py',
 } | {f'skills/{package}/{name}' for package, files in PACKAGES.items() for name in files}
 PATTERNS = {
