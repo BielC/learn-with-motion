@@ -36,6 +36,16 @@ Its diagram guidance also transfers: reuse a few suitable visual conventions, in
 
 Retain this skill's requested output and teaching choices. The gist's long HTML page, Notion publishing and five multiple-choice questions are not defaults here. Toy data is useful selectively; it does not require numerical examples in every explanation. Summarize definitions or consequential edge cases within the current visual when useful, without adding a permanent callout panel. This is an original adaptation with source attribution, not a copied prompt or a requirement to imitate a named author's prose.
 
+## Follow-up: claude-writing-skills
+
+Reviewed on 2026-11-15 at [revision 75fc02399884645ea8ae3e3761fdb088bcd12c38](https://github.com/nonatofabio/claude-writing-skills/tree/75fc02399884645ea8ae3e3761fdb088bcd12c38). Read the README, all three skill entrypoints (`plainspoken`, `humanize`, `ste`), the humanize tell catalog and voice template, and inspected its audit script. These are writing heuristics; this review does not establish their claimed standard compliance, authorship signals or educational effectiveness.
+
+Adopt answer-first writing for direct answers, specificity before vocabulary edits, familiar-to-new sentence flow, close subject/verb placement, consistent technical terms and a read-aloud pass. Both explainer packages now carry an independently installable [writing reference](../skills/explain-video/references/writing.md), loaded during drafting. The interactive copy also covers labels and controls; the video workflow checks the script before synthesis.
+
+Adapt the advice to teaching. Necessary background and definitions need not be debatable. A lesson needs orientation before an unfamiliar conclusion, and useful recaps can reconnect a long argument. Keep scientific uncertainty, precise terms, conditional behavior and meaningful technical comparisons. Apply a user's writing profile only when writing on their behalf.
+
+Do not adopt mandatory sentence-length variation scores, fixed paragraph shapes, a zero-flag audit gate, blanket hedge removal, forced opinions or the STE skill's controlled vocabulary and word caps. In particular, replacing "may" with "can" or "should" with "must" can change a specification's meaning. The upstream audit is not bundled or required. Its flags remain optional prompts for editorial judgment. No third-party script or prompt text was copied, and no new film or learner study was run for this text revision.
+
 ## Scope and reuse
 
 The comparison synthesizes ideas in original prose. No third-party code, prompts, voices, models or media were copied into this package. Most inspected repositories reported MIT licensing in GitHub metadata. License metadata for `gqy20/manim-agent` and `remotion-dev/skills` was inconclusive during this review, so no reuse permission is assumed. Check actual licenses before any future copying. Linked repositories and files may change; the links above pin the inspected revisions.

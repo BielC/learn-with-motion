@@ -9,6 +9,8 @@ Two independently installable agent skills for understanding technical subjects:
 
 Both start with the actual subject: what it is, what it does, why it is useful and where it fits. They establish necessary background before architecture and relevant mechanisms. Examples and numerical depth are chosen for the explanation. The default visual style is warm paper, dark ink, generous spacing and restrained accents.
 
+Both include a writing pass for concrete claims, connected reasoning and consistent terminology. Revise prose before production, preserve technical qualifications, and check narration aloud before synthesis. Writing-audit flags are optional review aids, not quality scores.
+
 ## Install
 
 This repository is a collection, not a skill folder. Install the desired subfolder, or both. Each includes its own required assets and references and works without its sibling or the repository checkout.
